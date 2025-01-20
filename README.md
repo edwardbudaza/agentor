@@ -1,36 +1,128 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Agent Assistant 🤖
+
+Your AI companion that goes beyond chat - powered by IBM WxTools & cutting-edge LLMs to help you get things done.
+
+<details>
+<summary>Table of Contents</summary>
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Environment Variables](#environment-variables)
+- [Usage](#usage)
+- [Development](#development)
+- [Contributing](#contributing)
+- [License](#license)
+
+</details>
+
+## Features
+
+- 🧠 Intelligent task completion with advanced AI understanding
+- ⚡ Real-time assistance for coding, research, and problem-solving
+- 🚀 Lightning-fast responses powered by state-of-the-art LLMs
+- 🎨 Modern UI with dark/light mode support
+- 🔒 Secure authentication via Clerk
+
+## Tech Stack
+
+- [Next.js 14](https://nextjs.org/) - React Framework
+- [Clerk](https://clerk.com/) - Authentication
+- [Tailwind CSS](https://tailwindcss.com/) - Styling
+- [shadcn/ui](https://ui.shadcn.com/) - UI Components
+- [IBM WxTools](https://ibm.com/wxtools) - AI Backend
+- [Lucide Icons](https://lucide.dev/) - Icons
+- [Convex](https:convex.dev) - Backend
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- Git
+
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/edwardbudaza/agentor.git
+cd agentor
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Set up environment variables (see section below)
+
+4. Run the development server:
 
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env.local` file in the root directory with the following variables:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_xxx
+CLERK_SECRET_KEY=sk_xxx
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard
 
-## Learn More
+# IBM WxTools
+IBM_API_KEY=your_api_key
+IBM_API_URL=your_api_url
 
-To learn more about Next.js, take a look at the following resources:
+# Database
+CONVEX_DEPLOYMENT=dev:***
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+NEXT_PUBLIC_CONVEX_URL=https://{your-convex-url}.convex.cloud
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Usage
 
-## Deploy on Vercel
+1. Visit `http://localhost:3000`
+2. Sign up or log in using Clerk authentication
+3. Access the AI assistant from your dashboard
+4. Start interacting with the AI to complete tasks
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Development
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The project follows a standard Next.js structure:
+
+```
+agentor/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── dashboard/
+├── components/
+├── lib/
+├── public/
+└── styles/
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a new branch: `git checkout -b feature/your-feature`
+3. Make your changes
+4. Push to the branch: `git push origin feature/your-feature`
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
