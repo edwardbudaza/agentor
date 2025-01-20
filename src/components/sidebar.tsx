@@ -1,27 +1,44 @@
+import { useMutation, useQuery } from 'convex/react';
 import { useRouter } from 'next/navigation';
+import { PlusIcon } from 'lucide-react';
 import { use } from 'react';
 
 import { cn } from '@/lib/utils';
 
-import { NavigationContext } from '@/components/providers/navigation-provider';
 import { Button } from '@/components/ui/button';
-import { PlusIcon } from 'lucide-react';
-import { useMutation, useQuery } from 'convex/react';
+import { NavigationContext } from '@/components/providers/navigation-provider';
+import { ChatRow } from '@/components/chat-row';
 import { api } from '../../convex/_generated/api';
+import { Id } from '../../convex/_generated/dataModel';
 
 export const Sidebar = () => {
   const router = useRouter();
   const { closeMobileNav, isMobileNavOpen } = use(NavigationContext);
 
-  // const chats = useQuery(api.chats.listChats)
-  // const createChat = useMutation(api.chats.createChat)
-  // const deleteChat = useMutation(api.chats.deleteChat)
+  const chats = useQuery(api.chats.listChats);
+  const createChat = useMutation(api.chats.createChat);
+  const deleteChat = useMutation(api.chats.deleteChat);
 
   const handleClick = () => {
     // TODO: Route to chat
-    // route.push("/dashboard/chat")
+    router.push('/dashboard/chat');
     closeMobileNav();
   };
+
+  const handleNewChat = async () => {
+    const chatId = await createChat({ title: 'New Chat' });
+    router.push(`/dashboard/chat/${chatId}`);
+    closeMobileNav();
+  };
+
+  const handleDeleteChat = async (id: Id<'chats'>) => {
+    await deleteChat({ id });
+    // If we're currently viewing this chat, redirect to dashboard
+    if (window.location.pathname.includes(id)) {
+      router.push('/dashboard');
+    }
+  };
+
   return (
     <>
       {isMobileNavOpen && (
@@ -38,7 +55,7 @@ export const Sidebar = () => {
       >
         <div className="p-4 border-b border-gray-200/50">
           <Button
-            // onClick={handleNewChat}
+            onClick={handleNewChat}
             className="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-200/50 shadow-sm hover:shadow transition-all duration-200"
           >
             <PlusIcon className="mr-2 h-4 w-4" /> New Chat
@@ -46,9 +63,9 @@ export const Sidebar = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto space-y2.5 p-4 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
-          {/* {chats?.map((chat) => (
-            <ChatRow key={chat._id} chat={chat} onDelete={handleDeleteChate} />
-          ))} */}
+          {chats?.map((chat) => (
+            <ChatRow key={chat._id} chat={chat} onDelete={handleDeleteChat} />
+          ))}
         </div>
       </div>
     </>
