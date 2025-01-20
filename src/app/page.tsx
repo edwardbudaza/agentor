@@ -9,6 +9,7 @@ import { ArrowRight, Loader, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 import { features } from '@/constants';
+import ModeToggle from '@/components/shared/mode-toggle';
 
 export default function LandingPage() {
   return (
@@ -17,6 +18,11 @@ export default function LandingPage() {
       <div className="absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
 
       <section className="w-full px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8 flex flex-col items-center space-y-10 text-center relative z-10">
+        {/* Mode Toggle */}
+        <div className="absolute top-6 right-6">
+          <ModeToggle />
+        </div>
+
         {/* Hero content */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
           <Sparkles className="h-8 w-8 text-primary animate-pulse" />

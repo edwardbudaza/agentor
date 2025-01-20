@@ -62,7 +62,6 @@ yarn install
 ```
 
 3. Set up environment variables (see section below)
-
 4. Run the development server:
 
 ```bash
@@ -111,8 +110,7 @@ agentor/
 │   └── dashboard/
 ├── components/
 ├── lib/
-├── public/
-└── styles/
+└──  public/
 ```
 
 ## Contributing
