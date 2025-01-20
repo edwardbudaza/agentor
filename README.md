@@ -87,7 +87,7 @@ IBM_API_KEY=your_api_key
 IBM_API_URL=your_api_url
 
 # Database
-CONVEX_DEPLOYMENT=dev:***
+CONVEX_DEPLOYMENT=dev:{your-convex-url}
 
 NEXT_PUBLIC_CONVEX_URL=https://{your-convex-url}.convex.cloud
 ```
