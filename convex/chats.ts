@@ -66,3 +66,28 @@ export const listChats = query({
     return chats;
   },
 });
+
+export const getChat = query({
+  args: { id: v.id('chats'), userId: v.string() },
+  handler: async (ctx, args) => {
+    try {
+      const chat = await ctx.db.get(args.id);
+
+      // Return null if chat doesn't exist or user is not authorized
+      if (!chat || chat.userId !== args.userId) {
+        console.log('Chat not found or unauthorized', {
+          chatExists: !!chat,
+          chatUserId: chat?.userId,
+          requestUserId: args.userId,
+        });
+        return null;
+      }
+
+      console.log('Chat found and authorized');
+      return chat;
+    } catch (error) {
+      console.error('Error in getChat', error);
+      return null;
+    }
+  },
+});
