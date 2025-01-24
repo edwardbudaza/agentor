@@ -62,12 +62,6 @@ export const ChatInterface = ({
     return `---START---\n${terminalHtml}\n---END---`;
   };
 
-  /**
-   * Processes a ReadableStream from the SSE response.
-   * This function continuously reads chunks of data from the stream until it's done.
-   * Each chunk is decoded from Uint8Array to string and passed to the callback.
-   */
-
   const processStream = async (
     reader: ReadableStreamDefaultReader<Uint8Array>,
     onChunk: (chunk: string) => Promise<void>
@@ -88,7 +82,6 @@ export const ChatInterface = ({
     const trimmedInput = input.trim();
     if (!trimmedInput || isLoading) return;
 
-    // Reste UI state for new message
     setInput('');
     setStreamedResponse('');
     setCurrentTool(null);
@@ -105,11 +98,9 @@ export const ChatInterface = ({
 
     setMessages((prev) => [...prev, optimisticUserMessage]);
 
-    // Track complete response for saving to database
     let fullResponse = '';
 
     try {
-      // Prepare chat history and new message for API
       const requestBody: ChatRequestBody = {
         messages: messages.map((msg) => ({
           role: msg.role,
@@ -119,7 +110,6 @@ export const ChatInterface = ({
         chatId,
       };
 
-      // Initialize SSE connection
       const response = await fetch('/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -129,98 +119,96 @@ export const ChatInterface = ({
       if (!response.ok) throw new Error(await response.text());
       if (!response.body) throw new Error('No response body available');
 
-      // Create SSE parser and stream reader
       const parser = createSSEParser();
       const reader = response.body.getReader();
 
-      // Process the stream chunks
       await processStream(reader, async (chunk) => {
-        // Parse SSE messages from the chunck
-        const messages = parser.parse(chunk);
-
-        // Handle each message based on its type
-        for (const message of messages) {
-          switch (message.type) {
-            case StreamMessageType.Token:
-              // Handle streaming tokens (normal text response)
-              if ('token' in message) {
-                fullResponse += message.token;
-                setStreamedResponse(fullResponse);
-              }
-              break;
-
-            case StreamMessageType.ToolStart:
-              // Handle start of tool execution (e.g API calls, file operations)
-              if ('tool' in message) {
-                setCurrentTool({
-                  name: message.tool,
-                  input: message.input,
-                });
-                fullResponse += formatTerminalOutput(
-                  message.tool,
-                  message.input,
-                  'Processing...'
-                );
-                setStreamedResponse(fullResponse);
-              }
-              break;
-
-            case StreamMessageType.ToolEnd:
-              // Handle completion of tool execution
-              if ('tool' in message && currentTool) {
-                // Replace the "Processing..." message with actual output
-                const lastTerminalIndex = fullResponse.lastIndexOf(
-                  '<div class=bg-[#1e1e1e]'
-                );
-                if (lastTerminalIndex !== -1) {
-                  fullResponse =
-                    fullResponse.substring(0, lastTerminalIndex) +
-                    formatTerminalOutput(
-                      message.tool,
-                      currentTool.input,
-                      message.output
-                    );
+        try {
+          const messages = parser.parse(chunk);
+          console.log('Parsed Messages:', messages);
+          for (const message of messages) {
+            console.log('Message Type:', message.type);
+            switch (message.type) {
+              case StreamMessageType.Token:
+                if ('token' in message) {
+                  fullResponse += message.token;
                   setStreamedResponse(fullResponse);
                 }
-                setCurrentTool(null);
-              }
-              break;
+                break;
 
-            case StreamMessageType.Error:
-              // Handle error messages from the stream
-              if ('error' in message) {
-                throw new Error(message.error);
-              }
-              break;
+              case StreamMessageType.ToolStart:
+                if ('tool' in message) {
+                  setCurrentTool({
+                    name: message.tool,
+                    input: message.input,
+                  });
+                  fullResponse += formatTerminalOutput(
+                    message.tool,
+                    message.input,
+                    'Processing...'
+                  );
+                  setStreamedResponse(fullResponse);
+                }
+                break;
 
-            case StreamMessageType.Done:
-              //Handle completion of the entire response
-              const assistantMessage: Doc<'messages'> = {
-                _id: `temp_assiatnt_${Date.now()}`,
-                chatId,
-                content: fullResponse,
-                role: 'assistant',
-                createdAt: Date.now(),
-              } as Doc<'messages'>;
+              case StreamMessageType.ToolEnd:
+                if ('tool' in message && currentTool) {
+                  const lastTerminalIndex = fullResponse.lastIndexOf(
+                    '<div class=bg-[#1e1e1e]'
+                  );
+                  if (lastTerminalIndex !== -1) {
+                    fullResponse =
+                      fullResponse.substring(0, lastTerminalIndex) +
+                      formatTerminalOutput(
+                        message.tool,
+                        currentTool.input,
+                        message.output
+                      );
+                    setStreamedResponse(fullResponse);
+                  }
+                  setCurrentTool(null);
+                }
+                break;
 
-              // Save the complete message to the database
-              const convex = getConvexClient();
-              await convex.mutation(api.messages.store, {
-                chatId,
-                content: fullResponse,
-                role: 'assistant',
-              });
+              case StreamMessageType.Error:
+                if ('error' in message) {
+                  throw new Error(message.error);
+                }
+                break;
 
-              setMessages((prev) => [...prev, assistantMessage]);
-              setStreamedResponse('');
-              return;
+              case StreamMessageType.Done:
+                const assistantMessage: Doc<'messages'> = {
+                  _id: `temp_assiatnt_${Date.now()}`,
+                  chatId,
+                  content: fullResponse,
+                  role: 'assistant',
+                  createdAt: Date.now(),
+                } as Doc<'messages'>;
+
+                const convex = getConvexClient();
+                await convex.mutation(api.messages.store, {
+                  chatId,
+                  content: fullResponse,
+                  role: 'assistant',
+                });
+
+                setMessages((prev) => [...prev, assistantMessage]);
+                setStreamedResponse('');
+
+                console.log('Streamed Response:', fullResponse);
+                console.log('Parsed Messages:', messages);
+                console.log('Message Type:', message.type);
+                console.log('Current Tool:', currentTool);
+
+                return;
+            }
           }
+        } catch (parseError) {
+          console.error('Error parsing stream:', parseError);
         }
       });
     } catch (error) {
-      // Handle any errors during streaming
       console.error('Error sending message: ', error);
-      // Remove the optimistic user message if the was an error
       setMessages((prev) =>
         prev.filter((msg) => msg._id !== optimisticUserMessage._id)
       );
@@ -238,19 +226,19 @@ export const ChatInterface = ({
 
   return (
     <main className="flex flex-col h-[calc(100vh-theme(spacing.14))]">
-      {/* Message container */}
       <section className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-800 p-2 md:p-0">
         <div className="max-w-4xl mx-auto p-4 space-y-3">
           {messages?.length === 0 && <WelcomeMessage />}
           {messages?.map((message: Doc<'messages'>) => (
             <MessageBubble
-              content={streamedResponse}
               key={message._id}
+              content={message.content}
               isUser={message.role === 'user'}
             />
           ))}
-          {streamedResponse && <MessageBubble content={streamedResponse} />}
-          {/* Loading indicator */}
+          {streamedResponse && (
+            <MessageBubble content={streamedResponse} isUser={false} />
+          )}
           {isLoading && !streamedResponse && (
             <div className="flex justify-start animate-in fade-in-0">
               <div className="rounded-2xl px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-bl-none shadow-sm ring-1 ring-inset ring-gray-200 dark:ring-gray-600">
@@ -270,7 +258,6 @@ export const ChatInterface = ({
         </div>
       </section>
 
-      {/* Input form */}
       <footer className="border-t bg-white dark:bg-gray-900 p-4">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto relative">
           <div className="relative flex items-center">
